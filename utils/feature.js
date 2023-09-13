@@ -1,9 +1,12 @@
 const jwt  = require('jsonwebtoken')
+const logger = require('./winstonLog')
 
 const sendCookie = async(newUser,res,statusCode,message) => {
 
     const toekn = await jwt.sign({_id: newUser._id},process.env.JWT_TOKEN_SECRET)
 
+    logger.info("Cookie created successfully")
+    
     res.status(statusCode)
     .cookie("token", toekn, {
         httpOnly : true,

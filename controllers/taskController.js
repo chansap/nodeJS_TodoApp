@@ -1,5 +1,6 @@
 const taskModel = require("../models/tasksModel")
 const CustomeError = require("../utils/customErr")
+const logger = require('../utils/winstonLog.js')
 
 const createTask = async(req, res, next) => {
 
@@ -13,16 +14,17 @@ const createTask = async(req, res, next) => {
         })
     
         if(taskData){
+            logger.info("Task created successfully")
             return res.status(201).json({
                 status : 201,
                 message : "Task created",
                 task : taskData
             })
         }else{
-            return next( new CustomeError())
+            return logger.error(next( new CustomeError()) )
         }
     }catch(err){
-        next(err)
+        logger.error(next(err) )
     }
 } 
 
@@ -32,15 +34,16 @@ const allMyTasks = async(req, res, next) => {
         const allTaskData = await taskModel.find({user : req.userProfile._id}).select({__v:0, user:0})
 
         if(allTaskData){
+            logger.info(`Getting all the tasks for ${req.userProfile.email}`)
             res.status(200).json({
                 success : true,
                 tasks : allTaskData
             })
         }else{
-            return next(new CustomeError('No datas available', 400) )
+            return logger.error( next(new CustomeError('No datas available', 400) ) )
         }
     }catch(err){
-        next(err)
+        logger.error( next(err) )
     }
 }
 
@@ -53,19 +56,20 @@ const updateTask = async(req, res, next) => {
     
         if(!particularTask){
             // return next(new Error('Invalid Error') )
-            return next(new CustomeError('Invalid Task for Update', 400) )
+            return logger.warn( next(new CustomeError('Invalid Task for Update', 400) ) )
         }
         else{
             particularTask.isCompleted = !particularTask.isCompleted
             particularTask.save()
         
+            logger.info("Task has been updated")
             res.status(200).json({
                 success : 200,
                 message : "Task Updated Successfully"
             })
         }
     }catch(err){
-        next(err)
+        logger.error( next(err) )
     }
 
 }
@@ -79,18 +83,19 @@ const deleteTask = async(req, res, next) => {
     
         if(!particularTask){
             // return next(new Error('Invalid Error') )
-            return next(new CustomeError('Invalid task to Delete', 404) )
+            return logger.error( next(new CustomeError('Invalid task to Delete', 404) ) )
         }
         else{
             particularTask.deleteOne()
     
+            logger.info("Task deleted successfully")
             res.status(200).json({
                 success : 200,
                 message : "Task deleted Successfully"
             })
         }
     }catch(err){
-        next(err)
+        logger.error( next(err) )
     }
 }
 

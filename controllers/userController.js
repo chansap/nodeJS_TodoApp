@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const createCookie = require('../utils/feature.js')
 const CustomeError = require("../utils/customErr")
+const logger = require('../utils/winstonLog.js')
 
 const getAllUsers = async(req, res) => {
     const user = await userModel.find({}).select({_id:0, password:0, __v:0})
@@ -22,7 +23,7 @@ const register = async(req, res, next) => {
             //     success : false,
             //     message: 'User already exist'
             // })
-            return next( new CustomeError("User already exist",404))
+            return logger.error( next( new CustomeError("User already exist",404)) )
         }
         else{
             let hashedPassword = await bcrypt.hash(password,10)
@@ -32,11 +33,11 @@ const register = async(req, res, next) => {
                 email,
                 password: hashedPassword
             })
-    
+            logger.info("User registered successfully")
             createCookie(newUser,res,201,"Successfully inserted")
         } 
     }catch(err){
-        next(err)
+        logger.error(next(err) )
     }  
 }
 
@@ -57,13 +58,14 @@ const login = async(req, res, next) => {
     
             if(isMatched){
                 createCookie(user,res,200,"Logged in Successfully")
+                logger.info("=============>> Logging In");
             }else{
                 // return res.status(404).json({
                 //     status: 404,
                 //     success: false,
                 //     message:"Incorrect Password"
                 // })
-                return next( new CustomeError("Incorrect Password",404))
+                return logger.warn(next( new CustomeError("Incorrect Password",404)) )
             }  
         }else{
             // return res.status(404).json({
@@ -71,15 +73,17 @@ const login = async(req, res, next) => {
             //     success: false,
             //     message:"User Not Found"
             // })
-            return next( new CustomeError("User Not Found", 404))
+            return logger.error(next( new CustomeError("User Not Found", 404)) )
         }
     }catch(err){
-        next(err)
+        logger.error(next(err.message))
     }
 }
 
 const getMyProfile = (req, res) => {
        
+    logger.info(`Getting Profile for ${req.userProfile.email}`)
+
     res.status(200).json({
         status: 200,
         message : "Profile",
@@ -89,6 +93,7 @@ const getMyProfile = (req, res) => {
 
 const logout = (req, res) => {
 
+    logger.info("=============>> Logging Out");
     res.status(200).cookie("token", null, {
         httpOnly: true,
         maxAge: 0,
